@@ -1,0 +1,8 @@
+name: MythicalWeapons
+main: aut.smn.mythicalcombat.main.Main
+version: 1.0
+api-version: 1.16
+
+commands:
+  debug:
+   description: get current weapon working on
