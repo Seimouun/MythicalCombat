@@ -17,10 +17,10 @@ public class Main extends JavaPlugin {
 		getCommand("debug").setExecutor(new DebugCommand());
 		PluginManager pl = Bukkit.getPluginManager();
 		pl.registerEvents(new SwordListener(), this);
+		SwordListener.update();
 	}
 	@Override
 	public void onDisable() {
-		// TODO Auto-generated method stub
 		super.onDisable();
 	}
 	public static Main getPlugin() {

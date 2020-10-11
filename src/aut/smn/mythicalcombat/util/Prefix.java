@@ -2,6 +2,6 @@ package aut.smn.mythicalcombat.util;
 
 public class Prefix {
 	public static String getPrefix() {
-		return "Â§3Â§lMC Â§rÂ§8> Â§f";
+		return "§3§lMC §r§8> §f";
 	}
 }

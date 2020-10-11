@@ -7,6 +7,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import aut.smn.mythicalcombat.util.Prefix;
+import aut.smn.mythicalcombat.util.SoundEffects;
 import aut.smn.mythicalcombat.util.Util;
 
 public class DebugCommand implements CommandExecutor {
@@ -15,7 +16,13 @@ public class DebugCommand implements CommandExecutor {
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		Player player = (Player)sender;
 		if(player.isOp()) {
-			player.getInventory().addItem(Util.createItem(Material.NETHERITE_SWORD, "Â§aFull Counter"));
+			if(args[0].equals("1")) {
+				player.getInventory().addItem(Util.createItem(Material.NETHERITE_SWORD, "§aFull Counter"));
+			}else if(args[0].equals("2")) {
+				SoundEffects.playFullCounterCounterSound(player);
+			}else if(args[0].equals("3")) {
+				player.getInventory().addItem(Util.createItem(Material.NETHERITE_SWORD, "§aPerfect Execution"));
+			}
 		}else {
 			player.sendMessage(Prefix.getPrefix() + "Â§cYou are not allowed to use that command");
 		}

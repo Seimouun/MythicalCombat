@@ -1,5 +1,6 @@
 package aut.smn.mythicalcombat.util;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 
 import org.bukkit.Location;
@@ -105,5 +106,51 @@ public class Util {
         } catch (IllegalAccessException e) { // Catch statement necessary for FieldUtils.readDeclaredField()
             e.printStackTrace();
         }
+    }
+	public static void setValue(Object obj, String name, Object value) {
+		try {
+			Field field = obj.getClass().getDeclaredField(name);
+			field.setAccessible(true);
+			field.set(obj, value);
+		}catch(Exception e) {}
+	}
+	public static Entity getFirstEntityInDirection(Player player, int range) {
+		for(int i = 0; i < 5; i++) {
+			for(Entity e : player.getWorld().getNearbyEntities(player.getLocation().add(player.getLocation().getDirection().multiply(i)), 1, 1, 1)){
+				if(e != player) {
+					if(player.getLocation().add(player.getLocation().getDirection()).distance(e.getLocation()) < 1.6) {
+						return e;
+					}
+				}
+			}
+		}
+		return null;
+	}
+	public static Entity getFirstEntityInDirectionOutside(Player player, int range) {
+		for(int i = 0; i < 5; i++) {
+			for(Entity e : player.getWorld().getNearbyEntities(player.getLocation().add(player.getLocation().getDirection().multiply(i)), 1.5, 1.5, 1.5)){
+				if(e != player) {
+					if(player.getLocation().add(player.getLocation().getDirection()).distance(e.getLocation()) > 1.6) {
+						return e;
+					}
+				}
+			}
+		}
+		return null;
+	}
+	public static Vector genVec(Location a, Location b) {
+        double dX = a.getX() - b.getX();
+        double dY = a.getY() - b.getY();
+        double dZ = a.getZ() - b.getZ();
+        double yaw = Math.atan2(dZ, dX);
+        double pitch = Math.atan2(Math.sqrt(dZ * dZ + dX * dX), dY) + Math.PI;
+        double x = Math.sin(pitch) * Math.cos(yaw);
+        double y = Math.sin(pitch) * Math.sin(yaw);
+        double z = Math.cos(pitch);
+
+        Vector vector = new Vector(x, z, y);
+        //If you want to: vector = vector.normalize();
+
+        return vector;
     }
 }

@@ -1,9 +1,18 @@
 package aut.smn.mythicalcombat.listeners;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.Particle;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftPlayer;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -16,9 +25,12 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 
 import aut.smn.mythicalcombat.main.Main;
+import aut.smn.mythicalcombat.util.SoundEffects;
 import aut.smn.mythicalcombat.util.Util;
+import net.minecraft.server.v1_16_R1.PacketPlayOutAnimation;
 
 public class SwordListener implements Listener {
 
@@ -28,19 +40,21 @@ public class SwordListener implements Listener {
 	private static ArrayList<String> fullCounterList = new ArrayList<String>();
 	private static ArrayList<Integer> fullCounterExplosionDamage = new ArrayList<Integer>();
 	
+	private static HashMap<String, Set<UUID>> perfectExecutionSelection =new HashMap<String, Set<UUID>>();
+	
 	@EventHandler
 	public void onSwordInterract(PlayerInteractEvent event) {
 		if(event.getItem() != null && event.getItem().hasItemMeta()) {
 			String itemName = event.getItem().getItemMeta().getDisplayName();
 			Player player = event.getPlayer();
-			if(itemName.equals("Â§aFull Counter")) {
+			if(itemName.equals("§aFull Counter")) {
 				fullCounterList.add(player.getName());
 				new BukkitRunnable() {
 					int timer = 0;
 					@Override
 					public void run() {
 						player.getWorld().spawnParticle(Particle.FLAME, player.getLocation().add(Util.getRightHandDireciton(player)), 10, 0.05, 0.05, 0.05, 0.01);
-						if(timer >= 10) {
+						if(timer >= 80) {
 							fullCounterList.remove(player.getName());
 							cancel();
 						}
@@ -48,6 +62,48 @@ public class SwordListener implements Listener {
 					}
 					
 				}.runTaskTimer(Main.getPlugin(), 0, 1);
+			}else if(itemName.equals("§aPerfect Execution")) {
+				for(UUID uuid : perfectExecutionSelection.get(player.getName())) {
+					Entity e = Bukkit.getEntity(uuid);
+					if(e != null) {
+						if(e instanceof LivingEntity) {
+							player.setGameMode(GameMode.SPECTATOR);
+							Vector vec = Util.genVec(player.getLocation(), e.getLocation()).normalize();
+							player.setVelocity(vec.multiply(4).add(new Vector(0,0.3,0)));
+							player.setFallDistance(0);
+							SoundEffects.playPerfectExecutionSound(player);
+							new BukkitRunnable() {
+								int timer = 0;
+								boolean damaged = false;
+								@Override
+								public void run() {
+									boolean canContinue = !damaged || player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(2)).getBlock().getType().equals(Material.AIR);
+									if(timer < 4 && canContinue) {
+										player.getWorld().spawnParticle(Particle.SQUID_INK, player.getLocation().add(0,1,0), 10, 0.2, 1, 0.2, 0.01);
+										if(player.getLocation().distance(e.getLocation()) < 2) {
+											player.setGameMode(GameMode.SURVIVAL);
+											EntityDamageByEntityEvent damageEvent = new EntityDamageByEntityEvent(player, e, DamageCause.ENTITY_ATTACK, 20);
+											Bukkit.getPluginManager().callEvent(damageEvent);
+											if(!damageEvent.isCancelled()) {
+												((LivingEntity)e).damage(20);
+												SoundEffects.playPerfectExecutionExecuteSound(player);
+												damaged = true;
+											}
+										}
+										timer++;
+									}else {
+										player.setGameMode(GameMode.SURVIVAL);
+										player.setVelocity(vec.multiply(0.2));
+										cancel();
+									}
+								}
+							}.runTaskTimer(Main.getPlugin(), 0, 1);
+						}
+					}
+				}
+				Set<UUID> list = perfectExecutionSelection.getOrDefault(player.getName(), new HashSet<UUID>());
+				list.clear();
+				perfectExecutionSelection.put(player.getName(), list);
 			}
 		}
 	}
@@ -72,18 +128,73 @@ public class SwordListener implements Listener {
 //		}
 //		
 //	}
+	public static void update() {
+		new BukkitRunnable() {
+			@Override
+			public void run() {
+				for(Player player : Bukkit.getOnlinePlayers()) {
+					if(player.getInventory().getItemInMainHand().hasItemMeta() && player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().equals("§aPerfect Execution")) {
+						glowEntitesAndReturnThem(player);
+					}
+				}
+			}
+		}.runTaskTimer(Main.getPlugin(), 0, 1);
+	}
+	public static void glowEntitesAndReturnThem(Player player) {
+		for(Entity e : player.getWorld().getNearbyEntities(player.getLocation(), 12, 12, 12)) {
+			if(e != player && !(e instanceof Item)) {
+				try {
+					if(e.getLocation().distance(player.getLocation()) < 13) {
+						Vector direction = player.getLocation().getDirection().normalize();
+						Vector directionToEntity = player.getLocation().add(0,1,0).subtract(e.getLocation().add(0,e.getHeight() / 2,0)).toVector().normalize();
+						double distance = direction.distance(directionToEntity);
+						
+						if(distance > 1.993) {
+							Set<UUID> list = perfectExecutionSelection.getOrDefault(player.getName(), new HashSet<UUID>());
+							list.add(e.getUniqueId());
+							perfectExecutionSelection.put(player.getName(), list);
+							
+							Util.setEntityGlowing(e, player, true);
+						}else {
+							Set<UUID> list = perfectExecutionSelection.getOrDefault(player.getName(), new HashSet<UUID>());
+							list.remove(e.getUniqueId());
+							perfectExecutionSelection.put(player.getName(), list);
+							
+							Util.setEntityGlowing(e, player, false);
+						}
+					}else {
+						Set<UUID> list = perfectExecutionSelection.getOrDefault(player.getName(), new HashSet<UUID>());
+						list.remove(e.getUniqueId());
+						perfectExecutionSelection.put(player.getName(), list);
+						
+						Util.setEntityGlowing(e, player, false);
+					}
+				} catch (Exception exc) {}
+			}
+		}
+	}
 	@EventHandler
 	public void onTakeDamageByEntity(EntityDamageByEntityEvent event) {
 		if(event.getDamager() instanceof Projectile) {
 			Projectile proj = (Projectile)event.getDamager();
-			if("counter_projectile".equals(proj.getCustomName())) {
-				event.setDamage(1 + event.getDamage() * 3);
+			if(proj.getCustomName().startsWith("counter_projectile_")) {
+				int damage = Integer.parseInt(proj.getCustomName().split("_")[2]);
+				event.setDamage(1 + damage * 3);
+				Bukkit.broadcastMessage((1 +damage * 3) + "");
 			}
 		}
 		if(event.getEntity() instanceof Player) {
 			if(fullCounterList.contains(event.getEntity().getName())) {
 				Player player = (Player)event.getEntity();
 				player.getWorld().spawnParticle(Particle.FLASH, player.getLocation(), 70, 0.5, 1, 0.5);
+				player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), 20, 0.5, 1, 0.5);
+		        PacketPlayOutAnimation packet = new PacketPlayOutAnimation();
+		        Util.setValue(packet, "a", player.getEntityId());
+		        Util.setValue(packet, "b", (byte)0);
+		        Bukkit.getOnlinePlayers().forEach(p -> {
+		        	((CraftPlayer)p).getHandle().playerConnection.sendPacket(packet);
+		        });
+				SoundEffects.playFullCounterCounterSound(player);
 				//explosion counter
 				if(event.getCause() == DamageCause.ENTITY_EXPLOSION) {
 					fullCounterExplosionDamage.add(event.getDamager().getEntityId());
@@ -95,7 +206,7 @@ public class SwordListener implements Listener {
 				}else if(event.getCause() == DamageCause.PROJECTILE) {
 					Projectile proj = (Projectile) player.getWorld().spawn(player.getEyeLocation(), event.getDamager().getClass());
 					event.getDamager().remove();
-					proj.setCustomName("counter_projectile");
+					proj.setCustomName("counter_projectile_" + event.getDamage());
 					proj.setVelocity(player.getLocation().getDirection().multiply(2));
 				}
 				event.setCancelled(true);
@@ -123,9 +234,19 @@ public class SwordListener implements Listener {
 		event.getAffectedEntities().forEach(x -> {
 			if(fullCounterList.contains(x.getName())) {
 				if(event.getEntity().getShooter() instanceof LivingEntity) {
-					Bukkit.broadcastMessage(event.getEntity().getMetadata("EffectData") + "");
-					event.getPotion().getEffects().forEach(e -> {x.removePotionEffect(e.getType());});
+					
 				}
+				event.getPotion().getEffects().forEach(e -> {x.removePotionEffect(e.getType());});
+				Player player = (Player)event.getEntity();
+				player.getWorld().spawnParticle(Particle.FLASH, player.getLocation(), 70, 0.5, 1, 0.5);
+				player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), 20, 0.5, 1, 0.5);
+		        PacketPlayOutAnimation packet = new PacketPlayOutAnimation();
+		        Util.setValue(packet, "a", player.getEntityId());
+		        Util.setValue(packet, "b", (byte)0);
+		        Bukkit.getOnlinePlayers().forEach(p -> {
+		        	((CraftPlayer)p).getHandle().playerConnection.sendPacket(packet);
+		        });
+				SoundEffects.playFullCounterCounterSound(player);
 				event.setCancelled(true);
 			}
 		});
