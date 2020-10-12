@@ -22,6 +22,8 @@ public class DebugCommand implements CommandExecutor {
 				SoundEffects.playFullCounterCounterSound(player);
 			}else if(args[0].equals("3")) {
 				player.getInventory().addItem(Util.createItem(Material.NETHERITE_SWORD, "§aPerfect Execution"));
+			}else if(args[0].equals("4")) {
+				player.getInventory().addItem(Util.createItem(Material.NETHERITE_SWORD, "§aHammer Shock"));
 			}
 		}else {
 			player.sendMessage(Prefix.getPrefix() + "Â§cYou are not allowed to use that command");

@@ -8,8 +8,10 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.craftbukkit.v1_16_R1.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -24,6 +26,8 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
@@ -41,6 +45,8 @@ public class SwordListener implements Listener {
 	private static ArrayList<Integer> fullCounterExplosionDamage = new ArrayList<Integer>();
 	
 	private static HashMap<String, Set<UUID>> perfectExecutionSelection =new HashMap<String, Set<UUID>>();
+	
+	private static HashMap<String, Integer> hammerShockState =new HashMap<String, Integer>();
 	
 	@EventHandler
 	public void onSwordInterract(PlayerInteractEvent event) {
@@ -104,6 +110,27 @@ public class SwordListener implements Listener {
 				Set<UUID> list = perfectExecutionSelection.getOrDefault(player.getName(), new HashSet<UUID>());
 				list.clear();
 				perfectExecutionSelection.put(player.getName(), list);
+			}else if(itemName.equals("§aHammer Shock")) {
+				int state = hammerShockState.getOrDefault(player.getName(), 0);
+				if(state == 0) {
+					Location playerLoc = player.getLocation();
+					player.getWorld().spawnParticle(Particle.BLOCK_CRACK, player.getLocation(), 200, 0.1, 0.5, 0.1, 0, playerLoc.clone().subtract(0,1,0).getBlock().getBlockData());
+					playerLoc.setPitch(0);
+					Vector direction = playerLoc.getDirection();
+					player.setVelocity(direction.setY(1.5));
+					hammerShockState.put(player.getName(), 1);
+					SoundEffects.playHammerShockLaunchInAir(player);
+				}else if(state == 1) {
+					player.setVelocity(new Vector(0,player.getVelocity().getY() / 2,0));
+					player.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, 20, 0, true));
+					hammerShockState.put(player.getName(), 2);
+					SoundEffects.playHammerShockIdle(player);
+				}else if(state == 2) {
+					player.removePotionEffect(PotionEffectType.LEVITATION);
+					player.setVelocity(player.getLocation().getDirection().multiply(3));
+					hammerShockState.put(player.getName(), 4);
+					SoundEffects.playHammerShockLaunchFromAir(player);
+				}
 			}
 		}
 	}
@@ -130,11 +157,41 @@ public class SwordListener implements Listener {
 //	}
 	public static void update() {
 		new BukkitRunnable() {
+			@SuppressWarnings("deprecation")
 			@Override
 			public void run() {
 				for(Player player : Bukkit.getOnlinePlayers()) {
 					if(player.getInventory().getItemInMainHand().hasItemMeta() && player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().equals("§aPerfect Execution")) {
 						glowEntitesAndReturnThem(player);
+					}else if(player.getInventory().getItemInMainHand().hasItemMeta() && player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().equals("§aHammer Shock")) {
+						int state = hammerShockState.getOrDefault(player.getName(), 0);
+						if(state == 4 && player.isOnGround()) {
+							player.getWorld().spawnParticle(Particle.BLOCK_CRACK, player.getLocation(), 1000, 3, 0.2, 3, 0, player.getLocation().subtract(0,1,0).getBlock().getBlockData());
+							player.setVelocity(player.getVelocity().multiply(0.2));
+							hammerShockState.put(player.getName(), 0);
+							SoundEffects.playHammerShockLand(player);
+							player.getWorld().getNearbyEntities(player.getLocation(), 3, 2, 3).forEach(e -> {
+								if(!e.equals(player) && e instanceof LivingEntity) {
+									EntityDamageByEntityEvent damageEvent = new EntityDamageByEntityEvent(player, e, DamageCause.ENTITY_ATTACK, 3);
+									Bukkit.getPluginManager().callEvent(damageEvent);
+									if(!damageEvent.isCancelled()) {
+										((LivingEntity)e).damage(3);
+										e.getWorld().playSound(e.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1f, 1f);
+										e.getWorld().playSound(e.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1f, 1f);
+										e.getWorld().strikeLightningEffect(e.getLocation());
+										e.getWorld().spawnParticle(Particle.BLOCK_CRACK, e.getLocation(), 50, 0.02, 0.2, 0.02, 0, e.getLocation().subtract(0,1,0).getBlock().getBlockData());
+										e.setVelocity(new Vector(0,1.3,0));
+									}else {
+										player.damage(3);
+										player.getWorld().playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1f, 1f);
+										player.getWorld().playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1f, 1f);
+										player.getWorld().strikeLightningEffect(player.getLocation());
+										player.getWorld().spawnParticle(Particle.BLOCK_CRACK, player.getLocation(), 50, 0.02, 0.2, 0.02, 0, player.getLocation().subtract(0,1,0).getBlock().getBlockData());
+										player.setVelocity(new Vector(0,1.3,0));
+									}
+								}
+							});
+						}
 					}
 				}
 			}

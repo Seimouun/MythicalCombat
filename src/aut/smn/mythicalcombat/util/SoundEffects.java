@@ -24,4 +24,16 @@ public class SoundEffects {
 		player.getWorld().playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.2f, 0.8f);
 		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.8f, 1.1f);
 	}
+	public static void playHammerShockLaunchInAir(Player player) {
+		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1f, 0.8f);
+	}
+	public static void playHammerShockLaunchFromAir(Player player) {
+		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PHANTOM_AMBIENT, 1f, 1.4f);
+	}
+	public static void playHammerShockIdle(Player player) {
+		player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 1f, 1f);
+	}
+	public static void playHammerShockLand(Player player) {
+		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1f, 0.7f);
+	}
 }
