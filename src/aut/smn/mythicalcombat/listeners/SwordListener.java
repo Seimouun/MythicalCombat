@@ -31,6 +31,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import aut.smn.mythicalcombat.effects.CrowdControl;
+import aut.smn.mythicalcombat.effects.CrowdControlType;
 import aut.smn.mythicalcombat.main.Main;
 import aut.smn.mythicalcombat.util.SoundEffects;
 import aut.smn.mythicalcombat.util.Util;
@@ -53,7 +55,7 @@ public class SwordListener implements Listener {
 		if (event.getItem() != null && event.getItem().hasItemMeta()) {
 			String itemName = event.getItem().getItemMeta().getDisplayName();
 			Player player = event.getPlayer();
-			if (itemName.equals("§aFull Counter")) {
+			if (itemName.equals("Â§aFull Counter")) {
 				fullCounterList.add(player.getName());
 				new BukkitRunnable() {
 					int timer = 0;
@@ -71,7 +73,7 @@ public class SwordListener implements Listener {
 					}
 
 				}.runTaskTimer(Main.getPlugin(), 0, 1);
-			} else if (itemName.equals("§aPerfect Execution")) {
+			} else if (itemName.equals("Â§aPerfect Execution")) {
 				for (UUID uuid : perfectExecutionSelection.get(player.getName())) {
 					Entity e = Bukkit.getEntity(uuid);
 					if (e != null) {
@@ -118,7 +120,7 @@ public class SwordListener implements Listener {
 				Set<UUID> list = perfectExecutionSelection.getOrDefault(player.getName(), new HashSet<UUID>());
 				list.clear();
 				perfectExecutionSelection.put(player.getName(), list);
-			} else if (itemName.equals("§aHammer Shock")) {
+			} else if (itemName.equals("Â§aHammer Shock")) {
 				int state = hammerShockState.getOrDefault(player.getName(), 0);
 				if (state == 0) {
 					Location playerLoc = player.getLocation();
@@ -171,43 +173,48 @@ public class SwordListener implements Listener {
 			@Override
 			public void run() {
 				for (Player player : Bukkit.getOnlinePlayers()) {
-					if (player.getInventory().getItemInMainHand().hasItemMeta() && player.getInventory()
-							.getItemInMainHand().getItemMeta().getDisplayName().equals("§aPerfect Execution")) {
+					if (player.getInventory().getItemInMainHand().hasItemMeta() && player.getInventory() .getItemInMainHand().getItemMeta().getDisplayName().equals("Â§aPerfect Execution")) {
 						glowEntitesAndReturnThem(player);
 					} else {
 						int state = hammerShockState.getOrDefault(player.getName(), 0);
 						if (state == 4 && player.isOnGround()) {
-							player.getWorld().spawnParticle(Particle.BLOCK_CRACK, player.getLocation(), 1000, 3, 0.2, 3,
-									0, player.getLocation().subtract(0, 1, 0).getBlock().getBlockData());
+							player.getWorld().spawnParticle(Particle.BLOCK_CRACK, player.getLocation(), 1000, 3, 0.2, 3, 0, player.getLocation().subtract(0, 1, 0).getBlock().getBlockData());
 							player.setVelocity(player.getVelocity().multiply(0.2));
 							hammerShockState.put(player.getName(), 0);
 							SoundEffects.playHammerShockLand(player);
 							player.getWorld().getNearbyEntities(player.getLocation(), 3, 2, 3).forEach(e -> {
 								if (!e.equals(player) && e instanceof LivingEntity) {
-									EntityDamageByEntityEvent damageEvent = new EntityDamageByEntityEvent(player, e,
-											DamageCause.ENTITY_ATTACK, 3);
+									EntityDamageByEntityEvent damageEvent = new EntityDamageByEntityEvent(player, e, DamageCause.ENTITY_ATTACK, 3);
 									Bukkit.getPluginManager().callEvent(damageEvent);
 									if (!damageEvent.isCancelled()) {
-										((LivingEntity) e).damage(3);
-										e.getWorld().playSound(e.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1f,
-												1f);
-										e.getWorld().playSound(e.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1f,
-												1f);
-										e.getWorld().strikeLightningEffect(e.getLocation());
-										e.getWorld().spawnParticle(Particle.BLOCK_CRACK, e.getLocation(), 50, 0.02, 0.2,
-												0.02, 0, e.getLocation().subtract(0, 1, 0).getBlock().getBlockData());
-										e.setVelocity(new Vector(0, 1.3, 0));
+										((LivingEntity) e).damage(6);
+										new CrowdControl() {
+											
+											@Override
+											public CrowdControl effect(Entity entity) {
+												entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1f, 1f);
+												entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1f, 1f);
+												entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1f, 1f);
+												entity.getWorld().strikeLightningEffect(entity.getLocation());
+												entity.getWorld().spawnParticle(Particle.BLOCK_CRACK, entity.getLocation(), 50, 0.02, 0.2, 0.02, 0, entity.getLocation().subtract(0, 1, 0).getBlock().getBlockData());
+												return this;
+											}
+										}.control(e, CrowdControlType.AIRBORNE.setIntensity(1.3));
 									} else {
-										player.damage(3);
-										player.getWorld().playSound(player.getLocation(),
-												Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1f, 1f);
-										player.getWorld().playSound(player.getLocation(),
-												Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1f, 1f);
-										player.getWorld().strikeLightningEffect(player.getLocation());
-										player.getWorld().spawnParticle(Particle.BLOCK_CRACK, player.getLocation(), 50,
-												0.02, 0.2, 0.02, 0,
-												player.getLocation().subtract(0, 1, 0).getBlock().getBlockData());
-										player.setVelocity(new Vector(0, 1.3, 0));
+										player.damage(6);
+										new CrowdControl() {
+											
+											@Override
+											public CrowdControl effect(Entity entity) {
+												entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1f, 1f);
+												entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1f, 1f);
+												entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1f, 1f);
+												entity.getWorld().strikeLightningEffect(entity.getLocation());
+												entity.getWorld().spawnParticle(Particle.BLOCK_CRACK, entity.getLocation(), 50, 0.02, 0.2, 0.02, 0, entity.getLocation().subtract(0, 1, 0).getBlock().getBlockData());
+												return this;
+											}
+										}.control(player, CrowdControlType.AIRBORNE.setIntensity(1.3));
+										
 									}
 								}
 							});
@@ -263,7 +270,6 @@ public class SwordListener implements Listener {
 			if (proj.getCustomName().startsWith("counter_projectile_")) {
 				int damage = Integer.parseInt(proj.getCustomName().split("_")[2]);
 				event.setDamage(1 + damage * 3);
-				Bukkit.broadcastMessage((1 + damage * 3) + "");
 			}
 		}
 		if (event.getEntity() instanceof Player) {

@@ -17,13 +17,13 @@ public class DebugCommand implements CommandExecutor {
 		Player player = (Player)sender;
 		if(player.isOp()) {
 			if(args[0].equals("1")) {
-				player.getInventory().addItem(Util.createItem(Material.NETHERITE_SWORD, "�aFull Counter"));
+				player.getInventory().addItem(Util.createItem(Material.NETHERITE_SWORD, "§aFull Counter", new String[] {"§8Counter every §7Attack §8or §7Spell", "§8and repell the spell with §b150% §8of the damage"}));
 			}else if(args[0].equals("2")) {
 				SoundEffects.playFullCounterCounterSound(player);
 			}else if(args[0].equals("3")) {
-				player.getInventory().addItem(Util.createItem(Material.NETHERITE_SWORD, "�aPerfect Execution"));
+				player.getInventory().addItem(Util.createItem(Material.NETHERITE_SWORD, "§aPerfect Execution", new String[] {"§8Select any entity by hovering them,", "§8activate the item and slash through all of the entities", "§8dealing §b10♥ §8damage"}));
 			}else if(args[0].equals("4")) {
-				player.getInventory().addItem(Util.createItem(Material.NETHERITE_SWORD, "�aHammer Shock"));
+				player.getInventory().addItem(Util.createItem(Material.NETHERITE_SWORD, "§aHammer Shock", new String[] {"§7This item has 3 activations", "§81. Launch yourself up in the air", "§82. Stop in the air for a brief second to aim", "§81. Launch yourself in a direction, ", "  §8slamming the ground causing", "  §8lightning to strike and §5knock upping", "  §8everyone surrounding you and", "  §8dealing §c3♥ §8damage"}, 100));
 			}
 		}else {
 			player.sendMessage(Prefix.getPrefix() + "§cYou are not allowed to use that command");

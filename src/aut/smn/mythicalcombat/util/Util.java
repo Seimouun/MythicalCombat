@@ -1,6 +1,7 @@
 package aut.smn.mythicalcombat.util;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.bukkit.Location;
@@ -10,6 +11,7 @@ import org.bukkit.Sound;
 import org.bukkit.craftbukkit.libs.org.apache.commons.lang3.reflect.FieldUtils;
 import org.bukkit.craftbukkit.v1_16_R1.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_16_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_16_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -19,6 +21,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
 import net.minecraft.server.v1_16_R1.DataWatcher;
+import net.minecraft.server.v1_16_R1.NBTTagCompound;
+import net.minecraft.server.v1_16_R1.NBTTagInt;
+import net.minecraft.server.v1_16_R1.NBTTagList;
+import net.minecraft.server.v1_16_R1.NBTTagString;
 import net.minecraft.server.v1_16_R1.PacketPlayOutEntityMetadata;
 
 public class Util {
@@ -30,7 +36,44 @@ public class Util {
 		iStack.setItemMeta(iMeta);
 		return iStack;
 	}
-
+	public static ItemStack createItem(Material mat, String itemName, String[] lore) {
+		ItemStack iStack = new ItemStack(mat);
+		ItemMeta iMeta = iStack.getItemMeta();
+		iMeta.setDisplayName(itemName);
+		iMeta.setLore(Arrays.asList(lore));
+		iStack.setItemMeta(iMeta);
+		return iStack;
+	}
+	public static ItemStack createItem(Material mat, String itemName, String[] lore, int attackSpeed) {
+		ItemStack iStack = new ItemStack(mat);
+		net.minecraft.server.v1_16_R1.ItemStack item = CraftItemStack.asNMSCopy(iStack);
+        NBTTagCompound nbt = (item.hasTag() ? item.getTag() : new NBTTagCompound());
+        NBTTagList modifiers = new NBTTagList();
+        NBTTagCompound aS = new NBTTagCompound();
+        aS.set("AttributeName", NBTTagString.a("genertic.attackSpeed"));
+        aS.set("Name", NBTTagString.a("genertic.attackSpeed"));
+        aS.set("Amount", NBTTagInt.a(attackSpeed));
+        aS.set("Operation", NBTTagInt.a(0));
+        aS.set("UUIDLeast", NBTTagInt.a(894654));
+        aS.set("UUIDMost", NBTTagInt.a(2872));
+        modifiers.add(aS);
+        nbt.set("AttributeModifiers", modifiers);
+        item.setTag(nbt);
+        iStack = CraftItemStack.asBukkitCopy(item);
+        ItemMeta iMeta = iStack.getItemMeta();
+		iMeta.setDisplayName(itemName);
+		iMeta.setLore(Arrays.asList(lore));
+		iStack.setItemMeta(iMeta);
+		return iStack;
+	}
+	public static ItemStack createItem(Material mat, String itemName, String[] lore, int attackSpeed, double attackDamage) {
+		ItemStack iStack = new ItemStack(mat);
+		ItemMeta iMeta = iStack.getItemMeta();
+		iMeta.setDisplayName(itemName);
+		iMeta.setLore(Arrays.asList(lore));
+		iStack.setItemMeta(iMeta);
+		return iStack;
+	}
 	public static ItemStack createItem(Material mat, String itemName, boolean hideAttributes) {
 		ItemStack iStack = new ItemStack(mat);
 		ItemMeta iMeta = iStack.getItemMeta();
