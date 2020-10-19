@@ -148,6 +148,7 @@ public class Util {
             ((CraftPlayer) reciever).getHandle().playerConnection.sendPacket(metadataPacket);
         } catch (IllegalAccessException e) { // Catch statement necessary for FieldUtils.readDeclaredField()
             e.printStackTrace();
+        } catch (Exception e) {
         }
     }
 	public static void setValue(Object obj, String name, Object value) {
@@ -196,4 +197,20 @@ public class Util {
 
         return vector;
     }
+	public static ItemStack getItemStackInInventoryWithName(String name, Player player) {
+		for(ItemStack i : player.getInventory().getContents()) {
+			if(i.hasItemMeta() && i.getItemMeta().getDisplayName().equals(name)) {
+				return i;
+			}
+		}
+		return null;
+	}
+	public static ItemStack getItemStackInInventoryStartsWithName(String name, Player player) {
+		for(ItemStack i : player.getInventory().getContents()) {
+			if(i.hasItemMeta() && i.getItemMeta().getDisplayName().startsWith(name)) {
+				return i;
+			}
+		}
+		return null;
+	}
 }

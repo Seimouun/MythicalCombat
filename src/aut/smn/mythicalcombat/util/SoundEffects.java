@@ -1,5 +1,6 @@
 package aut.smn.mythicalcombat.util;
 
+import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
@@ -35,5 +36,34 @@ public class SoundEffects {
 	}
 	public static void playHammerShockLand(Player player) {
 		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1f, 0.7f);
+	}
+	public static void playAwakeningSoulsRecieve(Player player) {
+		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_BLAST, 0.6f, 0.8f);
+	}
+	public static void playAwakeningSoulsCall(Location loc) {
+		loc.getWorld().playSound(loc, Sound.ENTITY_WITHER_SHOOT, 0.6f, 0.8f);
+	}
+	public static void playAwakeningSoulsHit(Player player, float pitch) {
+		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, pitch);
+		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GHAST_DEATH, 1, pitch);
+	}
+	public static void playAzraelsScytheWindupSound(Location loc) {
+		loc.getWorld().playSound(loc, Sound.ENTITY_EVOKER_CAST_SPELL, 0.8f, 0.6f);
+	}
+	public static void playAzraelsScytheKnockUp(Location loc) {
+		loc.getWorld().playSound(loc, Sound.ENTITY_ENDER_DRAGON_HURT, 1f, 0.6f);
+		loc.getWorld().playSound(loc, Sound.BLOCK_PISTON_EXTEND, 0.8f, 0.6f);
+		loc.getWorld().playSound(loc, Sound.ENTITY_PLAYER_ATTACK_STRONG, 0.7f, 0.5f);
+	}
+	public static void playKulgronsScytheInto(Location loc) {
+		loc.getWorld().playSound(loc, Sound.BLOCK_BEACON_DEACTIVATE, 1f, 0.6f);
+		loc.getWorld().playSound(loc, Sound.ENTITY_VEX_HURT, 1f, 0.8f);
+		loc.getWorld().playSound(loc, Sound.ENTITY_ILLUSIONER_MIRROR_MOVE, 1f, 1f);
+		loc.getWorld().playSound(loc, Sound.ENTITY_ILLUSIONER_CAST_SPELL, 1f, 0.6f);
+	}
+	public static void playKulgronsScytheExit(Location loc) {
+		loc.getWorld().playSound(loc, Sound.ENTITY_ENDERMAN_HURT, 1f, 0.6f);
+		loc.getWorld().playSound(loc, Sound.ENTITY_IRON_GOLEM_HURT, 1f, 0.7f);
+		loc.getWorld().playSound(loc, Sound.BLOCK_CONDUIT_ACTIVATE, 1f, 0.6f);
 	}
 }

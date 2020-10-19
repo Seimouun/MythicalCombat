@@ -2,7 +2,7 @@ package aut.smn.mythicalcombat.effects;
 
 public enum CrowdControlType {
 
-	AIRBORNE, ROOT, SLOW, STUN;
+	AIRBORNE, ROOT, SLOW, STUN, KNOCKBACK;
 	
 	private int duration;
 	private double intensity;
