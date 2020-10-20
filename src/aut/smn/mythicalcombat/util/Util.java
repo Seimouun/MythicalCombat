@@ -12,14 +12,17 @@ import org.bukkit.craftbukkit.libs.org.apache.commons.lang3.reflect.FieldUtils;
 import org.bukkit.craftbukkit.v1_16_R1.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_16_R1.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_16_R1.inventory.CraftItemStack;
+import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import aut.smn.mythicalcombat.main.Main;
 import net.minecraft.server.v1_16_R1.DataWatcher;
 import net.minecraft.server.v1_16_R1.NBTTagCompound;
 import net.minecraft.server.v1_16_R1.NBTTagInt;
@@ -212,5 +215,21 @@ public class Util {
 			}
 		}
 		return null;
+	}
+	@SuppressWarnings("deprecation")
+	public static void setItemCooldown(ItemStack iStack, int ticks) {
+		new BukkitRunnable() {
+			int tick = 0;
+			@Override
+			public void run() {
+				short maxDur = iStack.getType().getMaxDurability();
+				if(tick <= ticks) {
+					iStack.setDurability((short)(maxDur - maxDur * tick / ticks - 1));
+					tick++;
+				}else {
+					cancel();
+				}
+			}
+		}.runTaskTimer(Main.getPlugin(), 0, 1);
 	}
 }

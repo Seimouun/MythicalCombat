@@ -61,15 +61,17 @@ public class SwordListener implements Listener {
 	private static HashMap<String, UUID> perfectExecutionSelection = new HashMap<String, UUID>();
 	
 	private static HashMap<String, UUID> perfectTeleportationSelection = new HashMap<String, UUID>();
-
+	private static HashMap<String, Location> perfectTeleportationLocation = new HashMap<String, Location>();
+	
 	private static HashMap<String, Integer> hammerShockState = new HashMap<String, Integer>();
 	
 	private static ArrayList<Location> awakeningSoulsLocList = new ArrayList<Location>();
 	private static Set<String> kulgronsScytheList = new HashSet<String>();
 
+	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onSwordInterract(PlayerInteractEvent event) {
-		if (event.getItem() != null && event.getItem().hasItemMeta() && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK)) {
+		if (event.getItem() != null && event.getItem().hasItemMeta() && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) && event.getItem().getDurability() == 0) {
 			String itemName = event.getItem().getItemMeta().getDisplayName();
 			Player player = event.getPlayer();
 			if (itemName.equals("§aFull Counter")) {
@@ -97,6 +99,7 @@ public class SwordListener implements Listener {
 						player.setGameMode(GameMode.SPECTATOR);
 						Vector vec = Util.genVec(player.getLocation(), e.getLocation()).normalize();
 						player.setVelocity(vec.multiply(4).add(new Vector(0, 0.3, 0)));
+						Util.setItemCooldown(event.getItem(), 100);
 						player.setFallDistance(0);
 						SoundEffects.playPerfectExecutionSound(player);
 						new BukkitRunnable() {
@@ -245,17 +248,22 @@ public class SwordListener implements Listener {
 				}.runTaskTimer(Main.getPlugin(), 0, 1);
 			}else if (itemName.startsWith("§aChainlink")) {
 				
-			}else if (itemName.startsWith("§aPerfect Teleportation")) {
-				Entity e = Bukkit.getEntity(perfectExecutionSelection.get(player.getName()));
-				player.teleport(e.getLocation().subtract(e.getLocation().getDirection()));
-				perfectTeleportationSelection.put(player.getName(), e.getUniqueId());
-				new BukkitRunnable() {
-					
-					@Override
-					public void run() {
-						perfectTeleportationSelection.remove(player.getName());
-					}
-				}.runTaskLater(Main.getPlugin(), 60);
+			}else if (itemName.startsWith("§aPerfect Teleportation")) { 
+				if(!perfectTeleportationSelection.containsKey(player.getName()) && perfectExecutionSelection.get(player.getName()) != null) {
+					Entity e = Bukkit.getEntity(perfectExecutionSelection.get(player.getName()));
+					perfectTeleportationLocation.put(player.getName(), player.getLocation());
+					player.teleport(e.getLocation().subtract(e.getLocation().getDirection()));
+					new BukkitRunnable() {
+						
+						@Override
+						public void run() {
+							perfectTeleportationSelection.remove(player.getName());
+						}
+					}.runTaskLater(Main.getPlugin(), 60);
+				}else {
+					player.teleport(perfectTeleportationLocation.get(player.getName()));
+					perfectTeleportationSelection.remove(player.getName());
+				}
 			}
 		}
 	}
@@ -412,6 +420,8 @@ public class SwordListener implements Listener {
 	@EventHandler
 	public void onEntityDeath(EntityDeathEvent event) {
 		awakeningSoulsLocList.add(event.getEntity().getLocation());
+		if(event.getEntity().getKiller() != null)
+			perfectTeleportationSelection.put(event.getEntity().getKiller().getName(), event.getEntity().getUniqueId());
 	}
 	
 //	public static void glowEntitesAndReturnThem(Player player) {
